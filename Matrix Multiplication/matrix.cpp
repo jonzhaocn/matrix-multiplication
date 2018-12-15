@@ -58,9 +58,10 @@ void simd_matrix_multiplication(int size, float **mat_c, float **mat_a, float **
 	}
 	matrix_transpose(size, mat_b);
 }
-void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, float **mat_b)
+void further_optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, float **mat_b)
 {
-	__m256 m256_multi, m256_a1, m256_a2, m256_b1, m256_b2, m256_c1, m256_c2, m256_d1, m256_d2, m256_e1, m256_e2, m256_f1, m256_f2;
+	__m256 m256_multi, m256_a1, m256_a2, m256_b1, m256_b2, m256_c1, m256_c2, m256_d1, m256_d2, m256_e1, m256_e2, 
+		m256_f1, m256_f2, m256_g1, m256_g2, m256_h1, m256_h2;
 	__m256i mask = _mm256_setzero_si256();
 	int block_width = 8;
 	int len = size / block_width;
@@ -78,7 +79,9 @@ void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, flo
 	for (int i = 0; i < size; i += 1)
 	{
 		int j = 0;
-		for (; j < size-5; j += 6)
+		int regiter_count = 8;
+		int loop_times = size / regiter_count;
+		for (; j < loop_times*regiter_count; j += regiter_count)
 		{
 			int k = 0;
 			m256_a2 = _mm256_setzero_ps();
@@ -87,6 +90,8 @@ void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, flo
 			m256_d2 = _mm256_setzero_ps();
 			m256_e2 = _mm256_setzero_ps();
 			m256_f2 = _mm256_setzero_ps();
+			m256_g2 = _mm256_setzero_ps();
+			m256_h2 = _mm256_setzero_ps();
 			for (; k < block_width*len; k += block_width)
 			{
 				m256_multi = _mm256_load_ps(mat_a[i] + k);
@@ -102,6 +107,10 @@ void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, flo
 				m256_e2 = _mm256_add_ps(m256_e2, _mm256_mul_ps(m256_multi, m256_e1));
 				m256_f1 = _mm256_load_ps(mat_b[j + 5] + k);
 				m256_f2 = _mm256_add_ps(m256_f2, _mm256_mul_ps(m256_multi, m256_f1));
+				m256_g1 = _mm256_load_ps(mat_b[j + 6] + k);
+				m256_g2 = _mm256_add_ps(m256_g2, _mm256_mul_ps(m256_multi, m256_g1));
+				m256_h1 = _mm256_load_ps(mat_b[j + 7] + k);
+				m256_h2 = _mm256_add_ps(m256_h2, _mm256_mul_ps(m256_multi, m256_h1));
 			}
 			if (remainder > 0)
 			{
@@ -118,6 +127,10 @@ void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, flo
 				m256_e2 = _mm256_add_ps(m256_e2, _mm256_mul_ps(m256_multi, m256_e1));
 				m256_f1 = _mm256_maskload_ps(mat_b[j + 5] + k, mask);
 				m256_f2 = _mm256_add_ps(m256_f2, _mm256_mul_ps(m256_multi, m256_f1));
+				m256_g1 = _mm256_maskload_ps(mat_b[j + 6] + k, mask);
+				m256_g2 = _mm256_add_ps(m256_g2, _mm256_mul_ps(m256_multi, m256_g1));
+				m256_h1 = _mm256_maskload_ps(mat_b[j + 7] + k, mask);
+				m256_h2 = _mm256_add_ps(m256_h2, _mm256_mul_ps(m256_multi, m256_h1));
 			}
 			const float *temp1 = (const float*)&m256_a2;
 			mat_c[i][j] = temp1[0] + temp1[1] + temp1[2] + temp1[3] + temp1[4] + temp1[5] + temp1[6] + temp1[7];
@@ -131,6 +144,10 @@ void optimized_matrix_multiplication(int size, float **mat_c, float **mat_a, flo
 			mat_c[i][j + 4] = temp5[0] + temp5[1] + temp5[2] + temp5[3] + temp5[4] + temp5[5] + temp5[6] + temp5[7];
 			const float *temp6 = (const float*)&m256_f2;
 			mat_c[i][j + 5] = temp6[0] + temp6[1] + temp6[2] + temp6[3] + temp6[4] + temp6[5] + temp6[6] + temp6[7];
+			const float *temp7 = (const float*)&m256_g2;
+			mat_c[i][j + 6] = temp7[0] + temp7[1] + temp7[2] + temp7[3] + temp7[4] + temp7[5] + temp7[6] + temp7[7];
+			const float *temp8 = (const float*)&m256_h2;
+			mat_c[i][j + 7] = temp8[0] + temp8[1] + temp8[2] + temp8[3] + temp8[4] + temp8[5] + temp8[6] + temp8[7];
 		}
 		for (; j < size; j++) 
 		{
