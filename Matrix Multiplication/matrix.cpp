@@ -1,12 +1,14 @@
 #include "matrix.h"
 #include <intrin.h>
 #include "threadpool.h"
-//baseline
 std::mutex mutex;
+//baseline
 void matrix_multiplication(int n, float **mat_c, float **mat_a, float **mat_b)
 {
 	for (int i = 0; i < n; i++)
 	{
+		//loop permutation
+		//set k as the second loop index will speed up the matrix multiplication
 		for (int k = 0; k < n; k++)
 		{
 			for (int j = 0; j < n; j++)
@@ -33,6 +35,7 @@ void matrix_multiplication_simd(int size, float **mat_c, float **mat_a, float **
 			temp[i] = -1;
 		}
 	}
+	// matrix transpose
 	matrix_transpose(size, mat_b);
 	for (int i = 0; i < size; i += 1)
 	{
@@ -79,9 +82,9 @@ void matrix_multiplication_single_thread(int size, float **mat_c, float **mat_a,
 	for (int i = row_start; i < row_end; i += 1)
 	{
 		int j = 0;
-		int regiter_count = 4;
-		int loop_times = size / regiter_count;
-		for (; j < loop_times*regiter_count; j += regiter_count)
+		int unwinding_count = 4;
+		int loop_times = size / unwinding_count;
+		for (; j < loop_times*unwinding_count; j += unwinding_count)
 		{
 			int k = 0;
 			m256_a2 = _mm256_setzero_ps();
@@ -90,6 +93,8 @@ void matrix_multiplication_single_thread(int size, float **mat_c, float **mat_a,
 			m256_d2 = _mm256_setzero_ps();
 			for (; k < block_width*len; k += block_width)
 			{
+				//using the same multiplier from mat_c, reduce the times of loading memory
+				//loop unwinding
 				m256_multi = _mm256_load_ps(mat_a[i] + k);
 				m256_a1 = _mm256_load_ps(mat_b[j] + k);
 				m256_a2 = _mm256_add_ps(m256_a2, _mm256_mul_ps(m256_multi, m256_a1));
@@ -156,10 +161,12 @@ void matrix_multiplication_single_thread(int size, float **mat_c, float **mat_a,
 void matrix_multiplication_multi_thread(int size, float **mat_c, float **mat_a, float **mat_b)
 {
 	unsigned short thread_count = 16;
+	// threadpool
 	std::threadpool executor{ thread_count};
 	std::vector< std::future<void> > results;
 	int i = 0;
 	int step = int(size / thread_count);
+	// transpose matrix before multiplication and the mat_a and mat_b can be assess sequentially
 	matrix_transpose(size, mat_b);
 	for (; i < step*thread_count; i+=step)
 	{
