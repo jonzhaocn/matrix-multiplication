@@ -1,7 +1,7 @@
 #include<iostream>
-#include<time.h>
 #include "matrix.h"
 #include<stdio.h>
+#include<windows.h>
 using namespace std;
 int main() 
 {
@@ -16,20 +16,23 @@ int main()
 	float **matrix_b = create_random_matrix(n, lower_bound, upper_bound);
 	float **result1 = create_zeros_matrix(n);
 	float **result2 = create_zeros_matrix(n);
-
+	LARGE_INTEGER freq;
+	LARGE_INTEGER time_start;
+	LARGE_INTEGER time_end;
+	QueryPerformanceFrequency(&freq);
 	//ordinary matrix multiplication
-	clock_t time_start = clock();
+	QueryPerformanceCounter(&time_start);
 	matrix_multiplication(n, result1, matrix_a, matrix_b);
-	clock_t time_end = clock();
-	float time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	QueryPerformanceCounter(&time_end);
+	double time = (double)(time_end.QuadPart - time_start.QuadPart) / (double)freq.QuadPart;
 	printf("\n----------ordinary matrix multiplication----------\n");
-	printf("Time taken %0.3f s\n", time);
+	printf("Time taken %0.6f s\n", time);
 
 	//avx matrix multiplication
-	time_start = clock();
+	QueryPerformanceCounter(&time_start);
 	matrix_multiplication_simd(n, result2, matrix_a, matrix_b);
-	time_end = clock();
-	float avx_time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	QueryPerformanceCounter(&time_end);
+	double avx_time = (double)(time_end.QuadPart - time_start.QuadPart) / (double)freq.QuadPart;
 	printf("\n----------avx matrix multiplication----------\n");
 	printf("Time taken %0.3f s\n", avx_time);
 
@@ -38,12 +41,12 @@ int main()
 	float ssd = matrixs_sum_squared_difference(n, result1, result2);
 	printf("sum of squared difference: %f\n", ssd);
 	
-	//further optimized matrix multiplication
 	set_matrix_zero(n, result2);
-	time_start = clock();
+	//further optimized matrix multiplication
+	QueryPerformanceCounter(&time_start);
 	matrix_multiplication_multi_thread(n, result2, matrix_a, matrix_b);
-	time_end = clock();
-	float opt_time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	QueryPerformanceCounter(&time_end);
+	double opt_time = (double)(time_end.QuadPart - time_start.QuadPart) / (double)freq.QuadPart;
 	printf("\n----------further optimized multiplication----------\n");
 	printf("Time taken %0.3f s\n", opt_time);
 
