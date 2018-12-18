@@ -11,7 +11,7 @@ float **create_random_matrix(int size, int lower_bound, int upper_bound)
 		matrix[i] = (float *)_aligned_malloc(sizeof(float)*size, sizeof(float) * 8);
 		for (int j = 0; j < size; j++)
 		{
-			matrix[i][j] = float(rand() % (upper_bound - lower_bound + 1) + 1);
+			matrix[i][j] = float(rand()/double(RAND_MAX));
 		}
 	}
 	return matrix;
@@ -28,7 +28,13 @@ float **create_zeros_matrix(int size)
 	}
 	return matrix;
 }
-
+void set_matrix_zero(int size, float **matrix)
+{
+	for (int i = 0; i < size; i++)
+	{
+		memset(matrix[i], 0, sizeof(float)*size);
+	}
+}
 void matrix_transpose(int size, float **matrix)
 {
 	for (int i = 0; i < size; i++)

@@ -9,3 +9,4 @@ void matrix_transpose(int n, float **mat);
 float matrixs_sum_squared_difference(int size, float **mat_a, float **mat_b);
 void matrix_print(int size, float **mat);
 void matrix_delete(int size, float **mat);
+void set_matrix_zero(int size, float **matrix);

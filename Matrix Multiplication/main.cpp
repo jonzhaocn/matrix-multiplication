@@ -16,21 +16,21 @@ int main()
 	float **matrix_b = create_random_matrix(n, lower_bound, upper_bound);
 	float **result1 = create_zeros_matrix(n);
 	float **result2 = create_zeros_matrix(n);
-	
+
 	//ordinary matrix multiplication
-	clock_t start = clock();
+	clock_t time_start = clock();
 	matrix_multiplication(n, result1, matrix_a, matrix_b);
-	clock_t end = clock();
-	float time = (((float)end - (float)start) / CLOCKS_PER_SEC);
-	printf("\n--------------------ordinary matrix multiplication\n");
+	clock_t time_end = clock();
+	float time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	printf("\n----------ordinary matrix multiplication----------\n");
 	printf("Time taken %0.3f s\n", time);
 
 	//avx matrix multiplication
-	start = clock();
+	time_start = clock();
 	matrix_multiplication_simd(n, result2, matrix_a, matrix_b);
-	end = clock();
-	float avx_time = (((float)end - (float)start) / CLOCKS_PER_SEC);
-	printf("\n--------------------avx matrix multiplication\n");
+	time_end = clock();
+	float avx_time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	printf("\n----------avx matrix multiplication----------\n");
 	printf("Time taken %0.3f s\n", avx_time);
 
 	//speed up rate
@@ -39,11 +39,12 @@ int main()
 	printf("sum of squared difference: %f\n", ssd);
 	
 	//further optimized matrix multiplication
-	start = clock();
+	set_matrix_zero(n, result2);
+	time_start = clock();
 	matrix_multiplication_multi_thread(n, result2, matrix_a, matrix_b);
-	end = clock();
-	float opt_time = (((float)end - (float)start) / CLOCKS_PER_SEC);
-	printf("\n--------------------further optimized multiplication\n");
+	time_end = clock();
+	float opt_time = (((float)time_end - (float)time_start) / CLOCKS_PER_SEC);
+	printf("\n----------further optimized multiplication----------\n");
 	printf("Time taken %0.3f s\n", opt_time);
 
 	//speed up rate
