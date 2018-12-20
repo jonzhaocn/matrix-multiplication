@@ -11,6 +11,12 @@ int main()
 	srand((unsigned int)time(NULL));
 	cout << "please input a int as the matrix size:";
 	cin >> n;
+	if (n <= 0) 
+	{
+		printf("matrix size should greater than 0.\n");
+		system("pause");
+		return -1;
+	}
 	cout<<"matrix size:"<<n<<endl;
 	float **matrix_a = create_random_matrix(n, lower_bound, upper_bound);
 	float **matrix_b = create_random_matrix(n, lower_bound, upper_bound);
