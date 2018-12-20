@@ -1,6 +1,5 @@
 #include "matrix.h"
 #include <intrin.h>
-#include "threadpool.h"
 std::mutex mutex;
 //baseline
 void matrix_multiplication(int n, float **mat_c, float **mat_a, float **mat_b)
@@ -196,25 +195,26 @@ void matrix_multiplication_single_thread(int size, float **mat_c, float **mat_a,
 }
 void matrix_multiplication_multi_thread(int size, float **mat_c, float **mat_a, float **mat_b)
 {
-	unsigned short thread_count = 8;
-	// threadpool
-	std::threadpool executor{ thread_count};
-	std::vector< std::future<void> > results;
+	const unsigned short thread_count = 8;
+	// threads
+	std::thread threads[thread_count];
 	int i = 0;
 	int step = int(size / thread_count);
 	// transpose matrix before multiplication and the mat_a and mat_b can be assess sequentially
 	matrix_transpose(size, mat_b);
-	for (; i < step*thread_count; i+=step)
+	for (; i < thread_count-1; i++)
 	{
-		results.emplace_back(executor.commit(matrix_multiplication_single_thread, size, mat_c, mat_a, mat_b, i, i + step));
+		std::thread mat_thread(matrix_multiplication_single_thread, size, mat_c, mat_a, mat_b, i*step, (i+1)*step);
+		threads[i] = move(mat_thread);
 	}
-	if (i < size)
+	if ((i-1)*step < size)
 	{
-		results.emplace_back(executor.commit(matrix_multiplication_single_thread, size, mat_c, mat_a, mat_b, i, size));
+		std::thread mat_thread(matrix_multiplication_single_thread, size, mat_c, mat_a, mat_b, i*step, size);
+		threads[thread_count - 1] = move(mat_thread);
 	}
-	for (auto && result : results)
+	for (auto && mat_thread : threads)
 	{
-		result.get();
+		mat_thread.join();
 	}
 	matrix_transpose(size, mat_b);
 }

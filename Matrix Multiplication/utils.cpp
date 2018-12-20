@@ -6,12 +6,10 @@ float **create_random_matrix(int size, int lower_bound, int upper_bound)
 	for (int i = 0; i < size; i++)
 	{
 		// a avx register can store 8 float, make the matrix[i] be 32 byte alignment
-		//matrix[i] = new float[size + 8];
-		//matrix[i] = (float *)(((int)matrix[i] + 31) & ~31);
 		matrix[i] = (float *)_aligned_malloc(sizeof(float)*size, sizeof(float) * 8);
 		for (int j = 0; j < size; j++)
 		{
-			matrix[i][j] = float(rand()/double(RAND_MAX));
+			matrix[i][j] = float(rand()/double(RAND_MAX)) * upper_bound + lower_bound;
 		}
 	}
 	return matrix;

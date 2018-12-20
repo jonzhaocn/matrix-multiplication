@@ -7,7 +7,7 @@ int main()
 {
 	int n;
 	int lower_bound = 0;
-	int upper_bound = 100;
+	int upper_bound = 1;
 	srand((unsigned int)time(NULL));
 	cout << "please input a int as the matrix size:";
 	cin >> n;
