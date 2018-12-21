@@ -35,6 +35,9 @@ void set_matrix_zero(int size, float **matrix)
 }
 void matrix_transpose(int size, float **matrix)
 {
+	int thread_count = omp_get_num_procs();
+	omp_set_num_threads(thread_count);
+	#pragma omp parallel for
 	for (int i = 0; i < size; i++)
 	{
 		for (int j = i + 1; j < size; j++)

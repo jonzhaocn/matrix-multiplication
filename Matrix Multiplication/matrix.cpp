@@ -195,9 +195,9 @@ void matrix_multiplication_single_thread(int size, float **mat_c, float **mat_a,
 }
 void matrix_multiplication_multi_thread(int size, float **mat_c, float **mat_a, float **mat_b)
 {
-	const unsigned short thread_count = 8;
+	int thread_count = omp_get_num_procs();
 	// threads
-	std::thread threads[thread_count];
+	std::thread *threads = new std::thread[thread_count];
 	int i = 0;
 	int step = int(size / thread_count);
 	// transpose matrix before multiplication and the mat_a and mat_b can be assess sequentially
@@ -212,9 +212,10 @@ void matrix_multiplication_multi_thread(int size, float **mat_c, float **mat_a, 
 		std::thread mat_thread(matrix_multiplication_single_thread, size, mat_c, mat_a, mat_b, i*step, size);
 		threads[thread_count - 1] = move(mat_thread);
 	}
-	for (auto && mat_thread : threads)
+	for (i=0;i<thread_count;i++)
 	{
-		mat_thread.join();
+		threads[i].join();
 	}
+	delete[] threads;
 	matrix_transpose(size, mat_b);
 }
